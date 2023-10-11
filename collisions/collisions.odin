@@ -160,7 +160,12 @@ collider_intersect_segment :: proc(
 	sign := rl.Vector3{math.sign_f32(scale.x), math.sign_f32(scale.y), math.sign_f32(scale.z)}
 	neartime := (this.position - sign * (this.extends + padding) - point) * scale
 	fartime := (this.position + sign * (this.extends + padding) - point) * scale
-	if (neartime.x > fartime.y || neartime.y > fartime.x || neartime.z > fartime.z) {
+	if (neartime.x > fartime.y ||
+		   neartime.x > fartime.z ||
+		   neartime.y > fartime.x ||
+		   neartime.y > fartime.z ||
+		   neartime.z > fartime.x ||
+		   neartime.z > fartime.y) {
 		return nil
 	}
 

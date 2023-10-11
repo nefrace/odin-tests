@@ -7,7 +7,7 @@ import rl "vendor:raylib"
 main :: proc() {
 	rl.InitWindow(800, 600, "SEGMENT TO AABB")
 	camera := rl.Camera3D {
-		position = rl.Vector3{-3, 5, -5},
+		position = rl.Vector3{5, 5, 5},
 		up = rl.Vector3{0, 1, 0},
 		fovy = 45,
 		projection = rl.CameraProjection.PERSPECTIVE,
@@ -17,22 +17,23 @@ main :: proc() {
 		position = rl.Vector3{0, 0, 0},
 		extends = rl.Vector3{1, 1, 1},
 	}
-	point := rl.Vector3{0, 0, -2}
-	end := rl.Vector3{0, 0, 2}
+	point := rl.Vector3{-2, 0, 0}
+	end := rl.Vector3{2, 0, 0}
+	rl.DisableCursor()
 
 	rl.SetTargetFPS(60)
 
 	for (!rl.WindowShouldClose()) {
 		using rl
 
-		// UpdateCamera(&camera, CameraMode.ORBITAL)
+		UpdateCamera(&camera, CameraMode.THIRD_PERSON)
 
-		if (IsKeyDown(KeyboardKey.W)) {point.z -= 0.02}
-		if (IsKeyDown(KeyboardKey.S)) {point.z += 0.02}
-		if (IsKeyDown(KeyboardKey.A)) {point.x -= 0.02}
-		if (IsKeyDown(KeyboardKey.D)) {point.x += 0.02}
-		if (IsKeyDown(KeyboardKey.Q)) {point.y += 0.02}
-		if (IsKeyDown(KeyboardKey.E)) {point.y -= 0.02}
+		if (IsKeyDown(KeyboardKey.F)) {point.z -= 0.02}
+		if (IsKeyDown(KeyboardKey.V)) {point.z += 0.02}
+		if (IsKeyDown(KeyboardKey.C)) {point.x -= 0.02}
+		if (IsKeyDown(KeyboardKey.B)) {point.x += 0.02}
+		if (IsKeyDown(KeyboardKey.T)) {point.y += 0.02}
+		if (IsKeyDown(KeyboardKey.G)) {point.y -= 0.02}
 
 		if (IsKeyDown(KeyboardKey.I)) {end.z -= 0.02}
 		if (IsKeyDown(KeyboardKey.K)) {end.z += 0.02}
@@ -55,6 +56,7 @@ main :: proc() {
 		hit := c.collider_intersect_segment(cube, point, end - point, 0)
 		if hit != nil {
 			DrawCubeV(hit.position, Vector3{0.05, 0.05, 0.05}, GREEN)
+			DrawLine3D(Vector3{0, 0, 0}, hit.normal, RED)
 			// DrawCubeV(hit.delta, Vector3{0.05, 0.05, 0.05}, BLUE)
 			// DrawCubeV(hit.normal, Vector3{0.05, 0.05, 0.05}, YELLOW)
 		}
