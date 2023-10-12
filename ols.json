@@ -4,6 +4,10 @@
         {
             "name": "core",
             "path": "/home/nefrace/dev/odin/core"
+        },
+        {
+            "name": "shared",
+            "path": "src"
         }
     ],
     "enable_document_symbols": true,

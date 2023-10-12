@@ -1,8 +1,8 @@
 package tests
 
 import c "../../collisions"
+import "core:fmt"
 import rl "vendor:raylib"
-
 
 main :: proc() {
 	rl.InitWindow(800, 600, "SEGMENT TO AABB")
@@ -52,13 +52,26 @@ main :: proc() {
 		DrawLine3D(point, end, YELLOW)
 		DrawCubeWiresV(cube.position, cube.extends * 2, RED)
 
-
-		hit := c.collider_intersect_segment(cube, point, end - point, 0)
-		if hit != nil {
+		hit, ok := c.collider_intersect_segment(cube, point, end - point, 0).?
+		if ok {
+			fmt.println("AFTER: ", hit.position, hit.delta, hit.normal)
 			DrawCubeV(hit.position, Vector3{0.05, 0.05, 0.05}, GREEN)
 			DrawLine3D(Vector3{0, 0, 0}, hit.normal, RED)
-			// DrawCubeV(hit.delta, Vector3{0.05, 0.05, 0.05}, BLUE)
-			// DrawCubeV(hit.normal, Vector3{0.05, 0.05, 0.05}, YELLOW)
+			DrawLine3D(Vector3{0, 0, 0}, hit.delta, GREEN)
+		}
+
+
+		bb := rl.BoundingBox {
+			min = rl.Vector3{-1, -1, -1},
+			max = rl.Vector3{1, 1, 1},
+		}
+		ray := Ray {
+			position  = point,
+			direction = end - point,
+		}
+		rlhit := GetRayCollisionBox(ray, bb)
+		if rlhit.hit {
+			DrawCubeV(rlhit.point, Vector3{0.07, 0.07, 0.07}, YELLOW)
 		}
 
 		EndMode3D()

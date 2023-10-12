@@ -1,8 +1,8 @@
 package collisions
 
+import "core:fmt"
 import "core:math"
 import rl "vendor:raylib"
-
 // https://noonat.github.io/intersect/#sweeping-an-aabb-through-multiple-objects
 // https://www.youtube.com/watch?v=3dIiTo7mlnU
 // https://habr.com/ru/articles/334990/
@@ -150,7 +150,7 @@ collider_intersect_segment_2d :: proc(
 }
 
 
-collider_intersect_segment :: proc(
+collider_intersect_segment_old :: proc(
 	this: Collider,
 	point: rl.Vector3,
 	magnitude: rl.Vector3,
@@ -178,7 +178,8 @@ collider_intersect_segment :: proc(
 
 	hit := Hit {
 		collider = this,
-		time     = clamp(nt, 0, 1),
+		time = clamp(nt, 0, 1),
+		normal = rl.Vector3{0, 0, 0},
 	}
 
 	if neartime.x > neartime.y && neartime.x > neartime.z {
@@ -197,4 +198,60 @@ collider_intersect_segment :: proc(
 	hit.delta = (1.0 - hit.time) * -magnitude
 	hit.position = point + magnitude * hit.time
 	return &hit
+}
+
+collider_intersect_segment :: proc(
+	this: Collider,
+	point: rl.Vector3,
+	magnitude: rl.Vector3,
+	padding: rl.Vector3,
+) -> Maybe(Hit) {
+	scale := rl.Vector3{1 / magnitude.x, 1 / magnitude.y, 1 / magnitude.z}
+	sign := rl.Vector3{math.sign_f32(scale.x), math.sign_f32(scale.y), math.sign_f32(scale.z)}
+	neartime := (this.position - sign * (this.extends + padding) - point) * scale
+	fartime := (this.position + sign * (this.extends + padding) - point) * scale
+	if (neartime.x > fartime.y ||
+		   neartime.x > fartime.z ||
+		   neartime.y > fartime.x ||
+		   neartime.y > fartime.z ||
+		   neartime.z > fartime.x ||
+		   neartime.z > fartime.y) {
+		return nil
+	}
+
+	nt := max(
+		max(min(neartime.x, fartime.x), min(neartime.y, fartime.y)),
+		min(neartime.z, fartime.z),
+	)
+	ft := min(
+		min(max(neartime.x, fartime.x), max(neartime.y, fartime.y)),
+		max(neartime.z, fartime.z),
+	)
+
+	if nt >= 1 || ft <= 0 || nt > ft {
+		return nil
+	}
+
+	hit := Hit {
+		collider = this,
+		time = clamp(nt, -1, 1),
+		normal = rl.Vector3{0, 0, 0},
+	}
+
+	if neartime.x > neartime.y && neartime.x > neartime.z {
+		hit.normal.x = -sign.x
+		hit.normal.y = 0
+		hit.normal.z = 0
+	} else if neartime.y >= neartime.x && neartime.y > neartime.z {
+		hit.normal.x = 0
+		hit.normal.y = -sign.y
+		hit.normal.z = 0
+	} else if neartime.z >= neartime.x && neartime.z >= neartime.y {
+		hit.normal.x = 0
+		hit.normal.y = 0
+		hit.normal.z = -sign.z
+	}
+	hit.delta = (1.0 - hit.time) * -magnitude
+	hit.position = point + magnitude * hit.time
+	return hit
 }
