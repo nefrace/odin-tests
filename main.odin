@@ -8,7 +8,8 @@ import col "shared/collisions"
 import vec "shared/vector"
 import rl "vendor:raylib"
 
-MAX_RECTS :: 2000
+MAX_RECTS :: 300
+EPSILON :: 0.00001
 
 Player :: struct {
 	using collider: col.Collider,
@@ -44,7 +45,7 @@ main :: proc() {
 	}
 
 	for i in 0 ..< MAX_RECTS-1 {
-		pos := rl.Vector3{f32(rl.GetRandomValue(-300, 300))/10, f32(rl.GetRandomValue(0, 200))/10, f32(rl.GetRandomValue(-300, 300))/10}
+		pos := rl.Vector3{f32(rl.GetRandomValue(-3000, 3000))/100, f32(rl.GetRandomValue(0, 200))/10, f32(rl.GetRandomValue(-3000, 3000))/100}
 		ext := rl.Vector3{
 			f32(rl.GetRandomValue(2, 8)) / 4,
 			f32(rl.GetRandomValue(2, 8)) / 4,
@@ -60,7 +61,7 @@ main :: proc() {
 			position = pos,
 			extends = ext,
 			color = color,
-			layer = {},
+			layer = {col.Layers.Solid},
 			mask = {col.Layers.Solid},
 		}
 	}
@@ -86,6 +87,9 @@ main :: proc() {
 		right := Vector3{math.sin_f32(dir_right), 0, math.cos_f32(dir_right)}
 
 		player.velocity.y -= 0.009
+		if player.velocity.y < -0.03 {
+			player.onFloor = false
+		}
 		motion := Vector3{}
 		if (IsKeyDown(rl.KeyboardKey.W)) {motion += forward * 0.1}
 		if (IsKeyDown(KeyboardKey.S)) {motion -= forward * 0.1}
@@ -95,7 +99,7 @@ main :: proc() {
 		motion = vec.Vector3ClampValue(motion, 0, 0.2)
 		player.velocity.xz = motion.xz
 
-		cols: for j in 0 ..< 1 {
+		cols: for j in 0 ..< 5 {
 		for i in 0 ..< MAX_RECTS {
 			b := &blocks[i]
 			if card(player.mask & b.layer) == 0 {
@@ -111,7 +115,7 @@ main :: proc() {
 				player.extends,
 			).?
 			if ok {
-				player.position = hit.position
+				player.position = hit.position + hit.normal * EPSILON
 				v := vec.Vector3ProjectToPlane(player.velocity, hit.normal)
 				player.velocity = v
 				if hit.normal.y > 0 {
